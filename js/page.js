@@ -1,7 +1,8 @@
 var page = {
   init: function() {
     this.initUI();
-    this.eventInit()
+    this.eventInit();
+    this.dataRender();
   },
   initUI: function() {
     this.$container = $("#js-container");
@@ -9,6 +10,7 @@ var page = {
     this.$audioLoops = this.$audioParents.find(".js-radio-step");
     this.$audios = this.$audioParents.find(".js-audiosrc");
     this.loopTimeId = null;
+    this.renderData = "";
 
   },
   audioPlay: function(el) {
@@ -18,7 +20,7 @@ var page = {
     el.pause();
     el.currentTime = 0;
   },
-  audioLoopPlay: function($el,audioEl) {
+  audioLoopPlay: function($el, audioEl) {
     var that = this;
     (function _loop() {
       that.loopTimeId = setTimeout(function() {
@@ -30,7 +32,7 @@ var page = {
           $el.addClass("icon-radio-step1").removeClass("icon-radio-step2 icon-radio-step3")
         }
         //如果语音播放结束就停止动画
-        if(audioEl.ended){
+        if (audioEl.ended) {
           $el.addClass("icon-radio-step3").removeClass("icon-radio-step2 icon-radio-step1");
           return;
         }
@@ -65,14 +67,149 @@ var page = {
       } else {
         //让当前的播放并且声音动画开始
         that.audioPlay(currentAudio);
-        that.audioLoopPlay($currentLoop,currentAudio);
+        that.audioLoopPlay($currentLoop, currentAudio);
         $that.attr("data-play-flag", true);
       }
 
     })
   },
   dataRender: function() {
+    var that = this;
+    $(function() {
+      $.ajax({
+        type: 'GET',
+        url: 'http://localhost:3003/communication',
+        dataType: 'json',
+        success: function(data) {
+          that.renderData = data;
+          that.renderData.end == '0' ? that.renderTemplate(that.renderData.posts) : "";
 
+        }
+      })
+    })
+  },
+  renderTemplate: function(renderData) {
+    var html = ''
+
+    for (var i = 0; i < renderData.length; i++) {
+      var data = renderData[i];
+      switch (data.type) {
+        case 'leftText':
+          html += ['<div class="flow-left leftText clearfix">',
+            '      <div class="flow-time">',
+            '        <div class="date-time">' + data.dateTime + '</div>',
+            '      </div>',
+            '      <div class="left-header">',
+            '        <div class="img-box">',
+            '          <img src="' + data.headImage + '"class="pic">',
+            '        </div>',
+            '      </div>',
+            '      <div class="left-main">',
+            '        <div class="left-txt">',
+            '          <span class="left-arrow"></span> ' + data.content,
+            '        </div>',
+            '      </div>',
+            '</div>'
+          ].join("");
+          break;
+        case 'rightText':
+          html += ['<div class="flow-right rightText clearfix">',
+            '      <div class="flow-time">',
+            '        <div class="date-time">' + data.dateTime + '</div>',
+            '      </div>',
+            '      <div class="right-header">',
+            '        <div class="img-box">',
+            '          <img src="' + data.headImage + '" class="pic">',
+            '        </div>',
+            '      </div>',
+            '      <div class="right-main clearfix">',
+            '        <div class="right-txt">',
+            '          <span class="right-arrow"></span> ' + data.content,
+            '        </div>',
+            '      </div>',
+            '</div>'
+          ].join("");
+          break;
+        case 'leftSound':
+          html += ['<div class="flow-left leftAudio clearfix">',
+            '      <div class="flow-time">',
+            '        <div class="date-time">' + data.dateTime + '</div>',
+            '      </div>',
+            '      <div class="left-header">',
+            '        <div class="img-box">',
+            '          <img src="' + data.headImage + '" class="pic">',
+            '        </div>',
+            '      </div>',
+            '      <div class="left-main">',
+            '        <div class="left-audio js-audio">',
+            '          <i class="radio-step js-radio-step icon-radio-step3"></i>',
+            '          <audio src="' + data.sound.url + '" class="js-audiosrc"></audio>',
+            '          <span class="delay-second">' + data.sound.duration + '</span>',
+            '        </div>',
+            '      </div>',
+            '</div>'
+          ].join("");
+          break;
+        case 'rightSound':
+          html += ['<div class="flow-right rightAudio clearfix">',
+            '      <div class="flow-time">',
+            '        <div class="date-time">' + data.dateTime + '</div>',
+            '      </div>',
+            '      <div class="right-header">',
+            '        <div class="img-box">',
+            '          <img src="' + data.headImage + '" class="pic">',
+            '        </div>',
+            '      </div>',
+            '      <div class="right-main clearfix">',
+            '        <div class="right-audio js-audio">',
+            '          <i class="radio-step js-radio-step icon-radio-step3"></i>',
+            '          <audio src="' + data.sound.url + '" class="js-audiosrc"></audio>',
+            '          <span class="delay-second">' + data.sound.duration + '</span>',
+            '        </div>',
+            '      </div>',
+            '</div>'
+          ].join("");
+          break;
+        case 'leftImage':
+          html += ['<div class="flow-left leftImg clearfix">',
+            '      <div class="flow-time">',
+            '        <div class="date-time">' + data.dateTime + '</div>',
+            '      </div>',
+            '      <div class="left-header">',
+            '        <div class="img-box">',
+            '          <img src="' + data.headImage + '" class="pic">',
+            '        </div>',
+            '      </div>',
+            '      <div class="left-main">',
+            '        <div class="left-img">',
+            '            <span class="left-arrow"></span>',
+            '            <img src="' + data.imageArray.turl + '">',
+            '        </div>',
+            '      </div>',
+            '    </div>'
+          ].join("");
+          break;
+        case 'rightImage':
+        html += ['<div class="flow-right rightImg clearfix">',
+            '      <div class="flow-time">',
+            '        <div class="date-time">' + data.dateTime + '</div>',
+            '      </div>',
+            '      <div class="right-header">',
+            '        <div class="img-box">',
+            '          <img src="' + data.headImage + '" class="pic">',
+            '        </div>',
+            '      </div>',
+            '      <div class="right-main clearfix">',
+            '        <div class="right-img">',
+            '          <span class="right-arrow"></span>',
+            '          <img src="' + data.imageArray.turl + '" class="pic">',
+            '        </div>',
+            '      </div>',
+            '</div>'].join("");
+          break;
+      }
+    }
+    this.$container.html(html);
   }
 }
 
