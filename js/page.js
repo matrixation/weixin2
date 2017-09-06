@@ -1,7 +1,6 @@
 var page = {
   init: function() {
     this.initUI();
-    this.eventInit();
     this.dataRender();
   },
   initUI: function() {
@@ -11,7 +10,6 @@ var page = {
     this.$audios = this.$audioParents.find(".js-audiosrc");
     this.loopTimeId = null;
     this.renderData = "";
-
   },
   audioPlay: function(el) {
     el.play();
@@ -47,31 +45,35 @@ var page = {
   },
   eventInit: function() {
     var that = this;
-    that.$container.on("click", ".js-audio", function(e) {
-      var $that = $(this);
-      var currentAudio = $that.find(".js-audiosrc")[0];
-      var $currentLoop = $that.find(".js-radio-step");
+    $(function() {
+      that.$container.on("click", ".js-audio", function(e) {
+        var $that = $(this);
+        var currentAudio = $that.find(".js-audiosrc")[0];
+        var $currentLoop = $that.find(".js-radio-step");
 
-      //先暂停所有播放的声音与动画
-      that.$audioParents.not($that).each(function() {
-        that.audioPause($(this).find('.js-audiosrc')[0]);
-        that.audioLoopStop($(this).find('.js-radio-step'));
-        $(this).attr("data-play-flag", false);
+        //先暂停所有播放的声音与动画
+        that.$audioParents.not($that).each(function() {
+          that.audioPause($(this).find('.js-audiosrc')[0]);
+          that.audioLoopStop($(this).find('.js-radio-step'));
+          $(this).attr("data-play-flag", false);
+        })
+
+        //如果继续点击当前语音就暂停播放
+        if ($that.attr("data-play-flag") === 'true') {
+          that.audioPause(currentAudio);
+          that.audioLoopStop($currentLoop);
+          $that.attr("data-play-flag", false);
+        } else {
+          //让当前的播放并且声音动画开始
+          that.audioPlay(currentAudio);
+          that.audioLoopPlay($currentLoop, currentAudio);
+          $that.attr("data-play-flag", true);
+        }
+
       })
-
-      //如果继续点击当前语音就暂停播放
-      if ($that.attr("data-play-flag") === 'true') {
-        that.audioPause(currentAudio);
-        that.audioLoopStop($currentLoop);
-        $that.attr("data-play-flag", false);
-      } else {
-        //让当前的播放并且声音动画开始
-        that.audioPlay(currentAudio);
-        that.audioLoopPlay($currentLoop, currentAudio);
-        $that.attr("data-play-flag", true);
-      }
-
     })
+
+
   },
   dataRender: function() {
     var that = this;
@@ -82,15 +84,16 @@ var page = {
         dataType: 'json',
         success: function(data) {
           that.renderData = data;
-          that.renderData.end == '0' ? that.renderTemplate(that.renderData.posts) : "";
-
+          // that.renderData.end == '0' ? that.renderTemplate(that.renderData.posts) : "";
+          that.renderData.end == '0' ? that.templateEngineer(that.renderData.posts) : "";
+          that.initUI();
+          that.eventInit();
         }
       })
     })
   },
   renderTemplate: function(renderData) {
     var html = ''
-
     for (var i = 0; i < renderData.length; i++) {
       var data = renderData[i];
       switch (data.type) {
@@ -190,7 +193,7 @@ var page = {
           ].join("");
           break;
         case 'rightImage':
-        html += ['<div class="flow-right rightImg clearfix">',
+          html += ['<div class="flow-right rightImg clearfix">',
             '      <div class="flow-time">',
             '        <div class="date-time">' + data.dateTime + '</div>',
             '      </div>',
@@ -205,11 +208,61 @@ var page = {
             '          <img src="' + data.imageArray.turl + '" class="pic">',
             '        </div>',
             '      </div>',
-            '</div>'].join("");
+            '</div>'
+          ].join("");
           break;
       }
     }
     this.$container.html(html);
+  },
+  templateEngineer: function(renderData) {
+    var htmls = this.$container.html(),
+      htmlArr, replaceHtmls = "",
+      newReplaceHtml,that = this;
+    htmlArr = htmls.replace(/[\n\r]/g, '').split('#');
+
+    for (var i = 0; i < renderData.length; i++) {
+      var data = renderData[i];
+      switch (data.type) {
+        case 'leftText':
+          replaceHtmls += that.filterHtmlTemplate(htmlArr[0],data);
+          break;
+        case 'rightText':
+          replaceHtmls += that.filterHtmlTemplate(htmlArr[1],data);
+          break;
+        case 'leftSound':
+          replaceHtmls += that.filterHtmlTemplate(htmlArr[2],data);
+          break;
+        case 'rightSound':
+          replaceHtmls += that.filterHtmlTemplate(htmlArr[3],data);
+          break;
+        case 'leftImage':
+          replaceHtmls += that.filterHtmlTemplate(htmlArr[4],data);
+          break;
+        case 'rightImage':
+          replaceHtmls += that.filterHtmlTemplate(htmlArr[5],data);
+          break;
+      }
+    }
+
+    newReplaceHtml = replaceHtmls.replace(/\:src/g, function() {
+      return arguments[0].slice(1)
+    })
+    this.$container.empty().html(newReplaceHtml);
+  },
+  filterHtmlTemplate:function(arr,data){
+     return arr.replace(/{{(\w+\.?\w+)}}/g, function() {
+      var args = arguments[1].split('.'),
+        replaceStr;
+      args.forEach(function(key, index) {
+        if (!replaceStr) {
+          replaceStr = data[key]
+        } else {
+          replaceStr = replaceStr[key]
+        }
+      })
+      return replaceStr;
+    });
   }
 }
 

@@ -215,6 +215,32 @@
             "url": "./image/pic1.png",
             "size": "308111"
         }
+      },
+      {
+        "postId": "1",
+        "dateTime": "2017.01.20 18:36",
+        "type": "leftText",
+        "name": "王守财",
+        "headImage": "./image/2.png",
+        "content": "请喜郎中帮我看看这个患者的疑难杂症。",
+        "sound": {
+          "url": "",
+          "duration": ""
+        },
+        "imageArray": []
+      },
+      {
+        "postId": "2",
+        "dateTime": "2017.01.20 18:37",
+        "type": "rightText",
+        "name": "喜来乐",
+        "headImage": "./image/1.png",
+        "content": "怎么了?",
+        "sound": {
+          "url": "",
+          "duration": ""
+        },
+        "imageArray": []
       }
     ],
     "end": "0",
